@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wordle FR</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    background:#121213;
+    color:white;
+    text-align:center;
+    margin:0;
+}
+
+h1{
+    margin-top:20px;
+}
+
+#grid{
+    display:grid;
+    grid-template-columns:repeat(5,60px);
+    gap:5px;
+    justify-content:center;
+    margin-top:20px;
+}
+
+.cell{
+    width:60px;
+    height:60px;
+    border:2px solid #3a3a3c;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:2em;
+    font-weight:bold;
+    text-transform:uppercase;
+}
+
+.correct{
+    background:#538d4e;
+    border-color:#538d4e;
+}
+
+.present{
+    background:#b59f3b;
+    border-color:#b59f3b;
+}
+
+.absent{
+    background:#3a3a3c;
+    border-color:#3a3a3c;
+}
+
+#keyboard{
+    margin-top:30px;
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    max-width:700px;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.key{
+    margin:3px;
+    padding:12px;
+    min-width:35px;
+    background:#818384;
+    border:none;
+    color:white;
+    border-radius:4px;
+    cursor:pointer;
+}
+
+.message{
+    margin-top:20px;
+    font-size:1.2em;
+    font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<h1>WORDLE FR</h1>
+
+<div id="grid"></div>
+
+<div id="keyboard"></div>
+
+<div class="message" id="message"></div>
+
+<script>
+
+const WORDS = [
+    "AVION",
+    "LIVRE",
+    "TABLE",
+    "FLEUR",
+    "POMME",
+    "PLAGE",
+    "MAGIE",
+    "TRAIN",
+    "CHIEN",
+    "NUAGE"
+];
+
+const WORD = WORDS[Math.floor(Math.random()*WORDS.length)];
+
+const ROWS = 6;
+const COLS = 5;
+
+let row = 0;
+let col = 0;
+let guesses = Array(ROWS).fill().map(()=>Array(COLS).fill(""));
+
+const grid=document.getElementById("grid");
+const keyboard=document.getElementById("keyboard");
+const message=document.getElementById("message");
+
+for(let i=0;i<ROWS*COLS;i++){
+    const cell=document.createElement("div");
+    cell.className="cell";
+    grid.appendChild(cell);
+}
+
+const cells=document.querySelectorAll(".cell");
+
+const letters="AZERTYUIOPQSDFGHJKLMWXCVBN";
+
+for(let letter of letters){
+    const key=document.createElement("button");
+    key.className="key";
+    key.textContent=letter;
+    key.onclick=()=>handleLetter(letter);
+    keyboard.appendChild(key);
+}
+
+["ENTER","⌫"].forEach(label=>{
+    const key=document.createElement("button");
+    key.className="key";
+    key.textContent=label;
+    key.onclick=()=>{
+        if(label==="ENTER") submitGuess();
+        else deleteLetter();
+    };
+    keyboard.appendChild(key);
+});
+
+function updateGrid(){
+    cells.forEach((cell,index)=>{
+        const r=Math.floor(index/COLS);
+        const c=index%COLS;
+        cell.textContent=guesses[r][c];
+    });
+}
+
+function handleLetter(letter){
+    if(col<COLS && row<ROWS){
+        guesses[row][col]=letter;
+        col++;
+        updateGrid();
+    }
+}
+
+function deleteLetter(){
+    if(col>0){
+        col--;
+        guesses[row][col]="";
+        updateGrid();
+    }
+}
+
+function submitGuess(){
+
+    if(col!==COLS){
+        message.textContent="Mot incomplet";
+        return;
+    }
+
+    const guess=guesses[row].join("");
+
+    for(let c=0;c<COLS;c++){
+
+        const cell=cells[row*COLS+c];
+
+        if(guess[c]===WORD[c])
+            cell.classList.add("correct");
+
+        else if(WORD.includes(guess[c]))
+            cell.classList.add("present");
+
+        else
+            cell.classList.add("absent");
+    }
+
+    if(guess===WORD){
+        message.textContent="🎉 Bravo !";
+        return;
+    }
+
+    row++;
+    col=0;
+
+    if(row===ROWS){
+        message.textContent="Perdu ! Le mot était : " + WORD;
+    }
+}
+
+document.addEventListener("keydown",(e)=>{
+
+    if(/^[a-zA-Z]$/.test(e.key)){
+        handleLetter(e.key.toUpperCase());
+    }
+
+    if(e.key==="Backspace"){
+        deleteLetter();
+    }
+
+    if(e.key==="Enter"){
+        submitGuess();
+    }
+});
+
+updateGrid();
+
+</script>
+
+</body>
+</html>
